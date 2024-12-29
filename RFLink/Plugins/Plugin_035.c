@@ -123,8 +123,11 @@ boolean Plugin_035(byte function, const char *string)
       return true; // already seen the RF packet recently
    //==================================================================================
    rc = (data[1]) & 0x3;
-   temperature = ((data[3]) << 4);
-   temperature /= temperature;
+//*** IDkonnecT >>>
+   //temperature = ((data[3]) << 4);
+   //temperature /= temperature;
+   temperature = (data[3] - 40) * 10;
+//<<< IDkonnecT ***
    //==================================================================================
    // Output
    //==================================================================================
