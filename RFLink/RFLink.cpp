@@ -32,6 +32,15 @@
 #include "12_Portal.h"
 #include "13_OTA.h"
 
+//*** IDkonnecT >>>
+#ifdef WIFIMANAGER_ENABLED
+  #include "_WiFiManager_FOTA.h"
+#endif //WIFIMANAGER_ENABLED  
+#ifdef EQ3THERMOSTAT_ENABLED
+  #include "_eQ3Thermostat.h"
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
+
 #if (defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__))
 #include <avr/power.h>
 #endif
@@ -67,6 +76,15 @@ namespace RFLink {
       Serial.setTimeout(1);
 
       Serial.begin(BAUD); // Initialise the serial port
+
+    //*** IDkonnecT >>>
+      #ifdef WAIT_SERIAL_FOR_DEBUG
+      delay(10000);
+      unsigned long StartTimeOut = millis();
+      while (!Serial && millis()-StartTimeOut<60000) { delay(1000); };
+      Serial.println(F("*** Serial READY ***"));
+      #endif //WAIT_SERIAL_FOR_DEBUG  
+    //<<< IDkonnecT ***
 
       if (gettimeofday(&timeAtBoot, NULL) != 0) {
         Serial.println(F("Failed to obtain time"));
@@ -107,7 +125,14 @@ namespace RFLink {
       RFLink::Signal::setup();
 
 #if defined(RFLINK_WIFI_ENABLED)
+//*** IDkonnecT >>>
+      #ifdef WIFIMANAGER_ENABLED
+      pinMode(RFLINK_SHOW_CONFIG_PORTAL_PIN_BUTTON, INPUT_PULLUP);
+      SetUpWiFiManager();
+      #else
       RFLink::Wifi::setup();
+      #endif // WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***
       #ifndef RFLINK_PORTAL_DISABLED
       RFLink::Portal::init();
       #endif // RFLINK_PORTAL_DISABLED
@@ -131,12 +156,14 @@ namespace RFLink {
       setup_OLED();
 #endif
 
+//*** IDkonnecT >>>
+#ifndef RFLINK_MQTT_DISABLED
+      //RFLink::Mqtt::publishMsg(); // => won't work because MQTT will only be connected in the loops
+#else
+      pbuffer[0] = 0; // Not erasing pbuffer when MQTT_ENABLED for VER to get published in first loop
+#endif //MQTT_ENABLED
+//<<< IDkonnecT ***
 
-#ifdef MQTT_ENABLED
-      //RFLink::Mqtt::publishMsg();
-#endif
-
-      pbuffer[0] = 0;
       Radio::set_Radio_mode(Radio::Radio_RX);
 
 
@@ -148,17 +175,61 @@ namespace RFLink {
       RFLink::Serial2Net::setup();
 #endif // !RFLINK_SERIAL2NET_DISABLED
 #endif
+
+//*** IDkonnecT >>>
+#ifdef EQ3THERMOSTAT_ENABLED
+      SetupThermostats();
+      ScanThermostats(20);
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
     }
 
     void mainLoop() {
+//*** IDkonnecT >>>
+      delay(100); // To give CPU time to IDLE0 and IDLE1 tasks which feed WatchDog
+#ifdef WIFIMANAGER_ENABLED
+      if (digitalRead(RFLINK_SHOW_CONFIG_PORTAL_PIN_BUTTON)==LOW)
+      {
+        #ifdef RADIO_ENABLED
+        Radio::set_Radio_mode(Radio::Radio_OFF);  // Shut down interrupts
+        #endif
+        WiFiManagerPortal();                      // Launch WiFiManager
+      }
+      static unsigned long LastWiFiCheck=0;
+      if (millis()-LastWiFiCheck>WIFI_CHECK_PERIOD*1000UL)
+        {
+        if (!WiFi.isConnected())
+          {
+          Serial.println("/!\\ WiFi lost => try to reconnecT...");
+          // In case connection to WiFi AP before but router is ready (internet BOX), DHCP data is not provided and needs to be requested again
+          // https://stackoverflow.com/questions/40069654/how-to-clear-static-ip-configuration-and-start-dhcp
+          WiFi.config(0u, 0u, 0u);
+          // Trouble Shooting : in case wifiManager exits from Portal by timeout wifiManager.setWiFiAutoReconnect does not work
+          // in normal cases reconnect should be done by WiFi.setAutoReconnect or wifiManager.setWiFiAutoReconnect
+          WiFi.reconnect();
+          }
+        LastWiFiCheck=millis();
+        }
+#endif //WIFIMANAGER_ENABLED
+#ifdef EQ3THERMOSTAT_ENABLED
+      // A supprimer si conflit avec les Connect BLE
+      int Periodicite = 1 + millis()/600000; // Toutes les X min à la 10xX ième minute
+      if ((millis()/1000)%(60*Periodicite)==0) ScanThermostats(10);
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
+
       #ifndef RFLINK_MQTT_DISABLED
       RFLink::Mqtt::checkMQTTloop();
       #endif // RFLINK_MQTT_DISABLED
       RFLink::sendMsgFromBuffer();
 
+//*** IDkonnecT >>>
+#ifndef WIFIMANAGER_ENABLED
 #if defined(RFLINK_WIFI_ENABLED)
       RFLink::Wifi::mainLoop();
 #endif
+#endif // WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***  
 
 #ifndef RFLINK_SERIAL2NET_DISABLED
       RFLink::Serial2Net::serverLoop();
@@ -178,9 +249,19 @@ namespace RFLink {
         Serial.println(F("***** Rebooting now for scheduled reboot !!! *****"));
         ESP.restart();
       }
-
+//*** IDkonnecT >>>
+      if ((millis()/1000)>24UL*3600UL*REBOOT_PERIOD_DAYS)
+      {
+        Serial.println(F("***** Periodic Reboot now !!! *****"));
+        ESP.restart();
+      }
+//<<< IDkonnecT ***  
       Radio::mainLoop();
+//*** IDkonnecT >>>
+      #ifdef RFLINK_AUTOOTA_ENABLED
       OTA::mainLoop();
+      #endif //RFLINK_AUTOOTA_ENABLED
+//<<< IDkonnecT ***  
     }
 
     void sendMsgFromBuffer() {
