@@ -1,6 +1,7 @@
 #include "13_OTA.h"
 
 #include "RFLink.h"
+#ifdef RFLINK_AUTOOTA_ENABLED
 
 #ifdef ESP32
 #include <HTTPClient.h>
@@ -163,3 +164,5 @@ namespace RFLink
 
   } // end of AutoOTA namespace
 } // end of RFLink namespace
+
+#endif //RFLINK_AUTOOTA_ENABLED

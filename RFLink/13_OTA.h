@@ -1,6 +1,9 @@
 #ifndef _13_OTA_H_
 #define _13_OTA_H_
 
+#include "RFLink.h"
+#ifdef RFLINK_AUTOOTA_ENABLED
+
 #include <WString.h>
 #include <ArduinoJson.h>
 
@@ -30,5 +33,7 @@ namespace RFLink
 
   }
 } // end of RFLink namespace
+
+#endif //RFLINK_AUTOOTA_ENABLED
 
 #endif // _13_OTA_H_
