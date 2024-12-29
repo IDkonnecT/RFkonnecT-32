@@ -1,7 +1,10 @@
-#if defined(RFLINK_WIFI_ENABLED)
-
 #include "RFLink.h"
 #include <Arduino.h>
+
+//*** IDkonnecT >>>
+#if defined(RFLINK_WIFI_ENABLED)
+#ifndef WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***
 
 #include "6_Credentials.h"
 #include "10_Wifi.h"
@@ -88,8 +91,9 @@ namespace RFLink { namespace Wifi {
                 Config::ConfigItem(json_name_client_gateway,      Config::SectionId::Wifi_id, "192.168.0.1", clientParamsUpdatedCallback),
                 Config::ConfigItem(json_name_client_dns,          Config::SectionId::Wifi_id, "192.168.0.1", clientParamsUpdatedCallback),
                 Config::ConfigItem(json_name_client_hostname,     Config::SectionId::Wifi_id, DEFAULT_WIFI_CLIENT_HOSTNAME, clientParamsUpdatedCallback),
-
-                Config::ConfigItem(json_name_ap_enabled,  Config::SectionId::Wifi_id, true, accessPointParamsUpdatedCallback),
+//*** IDkonnecT >>>
+                Config::ConfigItem(json_name_ap_enabled,  Config::SectionId::Wifi_id, RFLINK_PORTAL_ENABLED, accessPointParamsUpdatedCallback),
+//<<< IDkonnecT ***
                 Config::ConfigItem(json_name_ap_ssid,     Config::SectionId::Wifi_id, "RFLink-AP", accessPointParamsUpdatedCallback),
                 Config::ConfigItem(json_name_ap_password, Config::SectionId::Wifi_id, "", accessPointParamsUpdatedCallback),
                 Config::ConfigItem(json_name_ap_ip,       Config::SectionId::Wifi_id, "192.168.4.1", accessPointParamsUpdatedCallback),
@@ -614,5 +618,8 @@ void eventHandler_WiFiStationDisconnected(const WiFiEventStationModeDisconnected
 
 } // end RFLink namespace
 
-#endif // RFLINK_WIFI_ENABLED
+//*** IDkonnecT >>>
+#endif //WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***
 
+#endif // RFLINK_WIFI_ENABLED

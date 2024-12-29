@@ -4,6 +4,9 @@
 #include "RFLink.h"
 
 #ifdef RFLINK_WIFI_ENABLED
+//*** IDkonnecT >>>
+#ifndef WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***
 #ifdef ESP8266
 #include "ESP8266WiFi.h"
 #else
@@ -40,6 +43,10 @@ namespace RFLink {
         void checkForUpdateAndApply();
     }
 }
+
+//*** IDkonnecT >>>
+#endif //WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***
 
 #endif //_10_WiFi_H
 
