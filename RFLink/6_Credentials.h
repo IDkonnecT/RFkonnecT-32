@@ -33,4 +33,10 @@ MIID (...)
 )EOF";
 #endif //CHECK_CACERT
 
+//*** IDkonnecT >>>
+#if __has_include("6_Credentials_Perso.h")
+#include "6_Credentials_Perso.h"
+#endif
+//<<< IDkonnecT ***
+
 #endif
