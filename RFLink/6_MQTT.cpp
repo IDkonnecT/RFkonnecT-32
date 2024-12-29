@@ -37,6 +37,15 @@ BearSSL::X509List *sslTrustedAnchors  = nullptr;
 
 #include <LittleFS.h>
 
+//*** IDkonnecT >>>
+#ifdef EQ3THERMOSTAT_ENABLED
+#include "_eQ3Thermostat.h"
+#endif //EQ3THERMOSTAT_ENABLED
+
+// To avoid compiler warning :
+#undef MQTT_KEEPALIVE
+#undef MQTT_SOCKET_TIMEOUT
+//<<< IDkonnecT ***
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds
 #define MQTT_KEEPALIVE 60
@@ -125,6 +134,15 @@ Config::ConfigItem configItems[] =  {
 };
 
 PubSubClient MQTTClient; // MQTTClient(WIFIClient);
+
+//*** IDkonnecT >>>
+#ifdef EQ3THERMOSTAT_ENABLED
+void Publie(const char* topic, const char* payload, boolean retained)
+  {
+  if(MQTTClient.connected()) MQTTClient.publish(topic, payload, retained);
+  }
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
 
 void callback(char *, byte *, unsigned int);
 
@@ -240,6 +258,11 @@ void setup_MQTT()
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
+  //*** IDkonnecT >>>
+#ifdef EQ3THERMOSTAT_ENABLED
+  if (eQ3MQTT(topic, payload, length)) return;
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
   payload[length] = 0;
   CheckMQTT(payload);
 }
@@ -253,8 +276,12 @@ void reconnect(int retryCount, bool force)
   if(paramsHaveChanged)
     return;
 
+//*** IDkonnecT >>>
+#ifndef WIFIMANAGER_ENABLED
   if(!Wifi::ntpIsSynchronized() && params::ssl_enabled && !params::ssl_insecure) // secured SSL is not possible without NTP
     return;
+#endif //WIFIMANAGER_ENABLED
+//<<< IDkonnecT ***
 
   struct timeval currentTime;
   gettimeofday(&currentTime, nullptr);
@@ -298,10 +325,32 @@ void reconnect(int retryCount, bool force)
     if(connectOK)
     {
       Serial.println(F("Established"));
+      //*** IDkonnecT >>>
+      Serial.print(F("MQTT Enabled :\t\t"));
+        Serial.println(params::enabled);
+      Serial.print(F("MQTT Serveur :\t\t"));
+        Serial.println(params::server.c_str());
+      Serial.print(F("MQTT Port :\t\t"));
+        Serial.println(params::port);
+      Serial.print(F("MQTT PSWD :\t\t"));
+        Serial.println(params::password.c_str());
+      Serial.print(F("MQTT Topic In :\t\t"));
+        Serial.println(params::topic_in.c_str());
+      Serial.print(F("MQTT Topic Out :\t\t"));
+        Serial.println(params::topic_out.c_str());
+      Serial.print(F("MQTT Topic LWT :\t\t"));
+        Serial.println(params::topic_lwt.c_str());
+      Serial.print(F("MQTT SSL enabled :\t\t"));
+        Serial.println(params::ssl_enabled);
+      Serial.print(F("MQTT SSL insecure :\t\t"));
+        Serial.println(params::ssl_insecure);
+      Serial.print(F("MQTT CA_CERT :\t\t"));
+        Serial.println(params::ca_cert.c_str());
+      //<<< IDkonnecT ***
       Serial.print(F("MQTT ID :\t\t"));
-      Serial.println(params::id.c_str());
-      Serial.print(F("MQTT Username :\t\t"));
-      Serial.println(params::user.c_str());
+        Serial.println(params::id.c_str());
+      Serial.print(F("MQTT User :\t\t"));
+        Serial.println(params::user.c_str());
       if(params::lwt_enabled) {
         #ifdef ESP32
               MQTTClient.publish((params::topic_lwt).c_str(), PSTR("Online"), true);
@@ -335,7 +384,10 @@ void publishMsg()
 
 void checkMQTTloop()
 {
-  if(!RFLink::Wifi::clientNetworkIsUp()) return;
+  //*** IDkonnecT >>>
+  //if(!RFLink::Wifi::clientNetworkIsUp()) return;
+  if(!WiFi.isConnected()) return;
+  //<<< IDkonnecT ***
 
   if(paramsHaveChanged) {
     paramsHaveChanged = false;
@@ -394,9 +446,13 @@ void checkMQTTloop()
             WIFIClientSecure->setTrustAnchors(sslTrustedAnchors);
             #endif
             Serial.println(F("OK!"));
+            //*** IDkonnecT >>>
+            #ifndef WIFIMANAGER_ENABLED
             if(!Wifi::ntpIsSynchronized()){
               Serial.println(F("MQTT SSL CA cert loaded, but NTP is not synchronized, so it will remain disabled until NTP is synchronized"));
             }
+            #endif //WIFIMANAGER_ENABLED
+            //<<< IDkonnecT ***
           } else {
             vars::disabledBecauseOfError = true;
             vars::lastError = F("Cannot open ca_crt file: ");

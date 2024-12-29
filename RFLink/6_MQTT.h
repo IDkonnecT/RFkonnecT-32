@@ -31,6 +31,11 @@
 #include <time.h>
 #include <sys/time.h>
 
+//*** IDkonnecT >>>
+#ifdef EQ3THERMOSTAT_ENABLED
+#include <PubSubClient.h>
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
 
 // #define MQTT_CLIENT_SSL_DISABLED // mainly used to save some memory on ESP8266 if wanted
 
@@ -64,6 +69,12 @@ namespace RFLink { namespace Mqtt {
         extern String ca_cert;
         #endif
     }
+
+//*** IDkonnecT >>>
+#ifdef EQ3THERMOSTAT_ENABLED
+void Publie(const char* topic, const char* payload, boolean retained);
+#endif //EQ3THERMOSTAT_ENABLED
+//<<< IDkonnecT ***
 
 void setup_MQTT();
 void reconnect(int retryCount=-1, bool force=false);
