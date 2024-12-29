@@ -163,6 +163,41 @@
 #endif
 #endif
 
+//*** IDkonnecT >>>
+#ifdef IDkonnecT
+#define RFLink_default_Radio_HardwareType HardwareType::HW_RFM69HCW_t
+#undef PIN_RF_RX_PMOS
+#undef PIN_RF_RX_NMOS
+#undef PIN_RF_RX_VCC
+#undef PIN_RF_RX_GND
+#undef PIN_RF_RX_NA
+#undef PIN_RF_RX_DATA
+#undef PIN_RF_RX_RESET
+#undef PIN_RF_RX_CS
+#undef PIN_RF_TX_PMOS
+#undef PIN_RF_TX_NMOS
+#undef PIN_RF_TX_VCC
+#undef PIN_RF_TX_GND
+#undef PIN_RF_TX_NA
+#undef PIN_RF_TX_DATA
+
+#define PIN_RF_RX_PMOS NOT_A_PIN // High Side P-MOSFET, active on LOW level
+#define PIN_RF_RX_NMOS NOT_A_PIN // Low Side N-MOSFET, active on HIGH level
+#define PIN_RF_RX_VCC NOT_A_PIN  // Power to the receiver on this pin
+#define PIN_RF_RX_GND NOT_A_PIN  // Ground to the receiver on this pin
+#define PIN_RF_RX_NA NOT_A_PIN   // Alt. RX_DATA. Forced as input
+#define PIN_RF_RX_DATA 25        // On this input, the 433Mhz-RF signal is received. LOW when no signal.
+#define PIN_RF_RX_RESET 4          // pin to reset transceiver
+#define PIN_RF_RX_CS 5             // Used for SPI "Slave Select"
+
+#define PIN_RF_TX_PMOS NOT_A_PIN // High Side P-MOSFET, active on LOW level
+#define PIN_RF_TX_NMOS NOT_A_PIN // Low Side N-MOSFET, active on HIGH level
+#define PIN_RF_TX_VCC NOT_A_PIN  // +5 volt / Vcc power to the transmitter on this pin
+#define PIN_RF_TX_GND NOT_A_PIN  // Ground power to the transmitter on this pin
+#define PIN_RF_TX_NA NOT_A_PIN   // Spare RX pin. Forced as input
+#define PIN_RF_TX_DATA NOT_A_PIN // Data to the 433Mhz transmitter on this pin
+#endif //IDkonnecT
+//<<< IDkonnecT ***
 
 namespace RFLink { namespace Radio {
 
