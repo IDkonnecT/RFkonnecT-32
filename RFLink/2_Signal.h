@@ -11,6 +11,19 @@
 #include <Arduino.h>
 #include "11_Config.h"
 
+//*** IDkonnecT => /!\ also replace return by break in .cpp on line 106 !!!!
+//                                //Original RFLink Value             // Recommended value
+#define RAW_BUFFER_SIZE 292                                           // 292    // Maximum number of pulses that is received in one go.
+#define MIN_RAW_PULSES 50         //36 (limit CPU usage)              // 50     // Minimal number of bits that need to have been received before we spend CPU time on decoding the signal.
+#define DEFAULT_RAWSIGNAL_SAMPLE_RATE 16  //ald 32 (Harvesting)       // 32     // ! must be 2^x =8 bits. Sample width / resolution in uSec for raw RF pulses.
+#define SIGNAL_SEEK_TIMEOUT_MS 25                                     // 25     // After this time in mSec, RF signal will be considered absent.
+#define SIGNAL_MIN_PREAMBLE_US 400                                    // 400    // After this time in uSec, a RF signal will be considered to have started.
+#define MIN_PULSE_LENGTH_US 10    //ald 100 (Harvesting)              // 250    // Pulses shorter than this value in uSec. will be seen as garbage and not taken as actual pulses.
+#define SIGNAL_END_TIMEOUT_US 3000//ald 5000 (fineOffset)             // 5000   // After this time in uSec, the RF signal will be considered to have stopped.
+#define SIGNAL_REPEAT_TIME_MS 1000//ald 250 (fineOffset)              // 500    // Time in mSec. in which the same RF signal should not be accepted again. Filters out retransmits.
+#define SCAN_HIGH_TIME_MS 50                                          // 50     // time interval in ms. fast processing for background tasks
+//IDkonnecT***
+/*
 #ifdef ESP32
 #define RAW_BUFFER_SIZE 1200        // 292        // Maximum number of pulses that is received in one go.
 #else
@@ -25,7 +38,7 @@
 #define SCAN_HIGH_TIME_MS 50       // 50         // time interval in ms. fast processing for background tasks
 
 #define DEFAULT_RAWSIGNAL_SAMPLE_RATE 1    // for compatibility with Arduinos only unless you want to scan pulses > 65000us
-
+*/
 #if defined(RFLINK_SIGNAL_DEBUG)
 #define RFLINK_SIGNAL_RSSI_DEBUG
 #endif

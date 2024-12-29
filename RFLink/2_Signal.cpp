@@ -272,11 +272,14 @@ namespace RFLink
         RESET_TIMESTART;
 
         // ***   Too short Pulse Check   ***
+//*** IDkonnecT >>>
         if (PulseLength_us < params::min_pulse_len)
         {
           // NO RawCodeLength++;
-          return false; // Or break; instead, if you think it may worth it.
+          //return false; // Or break; instead, if you think it may worth it.
+          break;
         }
+//<<< IDkonnecT ***
 
         // ***   Ending Pulse Check   ***
         if (PulseLength_us > params::signal_end_timeout) // Again, in main while this time
