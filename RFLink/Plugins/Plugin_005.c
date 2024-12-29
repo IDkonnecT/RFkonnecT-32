@@ -49,6 +49,17 @@
 #ifdef PLUGIN_005
 #include "../4_Display.h"
 
+//*** IDkonnecT >>>
+/*
+void PrintStream(unsigned long Stream)
+{
+   for (int i=31; i>=0; i--)
+      if ( (Stream>>i) & 1) Serial.print('1'); else Serial.print('0');
+   Serial.println();
+}
+*/
+//<<< IDkonnecT ***
+
 boolean Plugin_005(byte function, const char *string)
 {
    if (RawSignal.Number != EURODOMEST_PulseLength)
@@ -116,15 +127,18 @@ boolean Plugin_005(byte function, const char *string)
    // ----------------------------------
    unitcode = ((bitstream >> 1) & 0x7);
    command = (bitstream & 0x01);
-   if (unitcode == 0x3)
-      return false; // invalid button code?
-   if (unitcode == 0x4)
-      unitcode--;
+//*** IDkonnecT >>>
+   //PrintStream(bitstream);
+   //if (unitcode == 0x3)
+   //   return false; // invalid button code?
+   //if (unitcode == 0x4)
+   //   unitcode--;
    // if (unitcode == 5) return false;
    // Note: unitcode 5 is present on the PCB
    // and working but not used on any remotes.
-   // if (unitcode > 0x7) // Impossible by code design
-   // return false; // invalid button code?
+   if (unitcode > 0x7) // Impossible by code design
+   return false; // invalid button code?
+//<<< IDkonnecT ***
    //==================================================================================
    // Output
    // ----------------------------------
@@ -152,48 +166,42 @@ boolean PluginTX_005(byte function, const char *string)
 {
    //10;EURODOMEST;03696b;0;ON;
    //012345678901234567890123456
+//*** IDkonnecT
    boolean success = false;
-   if (strncasecmp(InputBuffer_Serial + 3, "EURODOMEST;", 11) == 0)
+   if (strcasecmp(InputBuffer_Serial + 3, "EURODOMEST") == 0)
    { // KAKU Command eg.
       unsigned long bitstream = 0L;
-      if (InputBuffer_Serial[20] != ';')
-         return success;
-      if (InputBuffer_Serial[22] != ';')
-         return success;
-
-      InputBuffer_Serial[12] = 0x30;
-      InputBuffer_Serial[13] = 0x78;
-      InputBuffer_Serial[20] = 0x00;
-      bitstream = str2int(InputBuffer_Serial + 12); // Address
-      InputBuffer_Serial[22] = 0x00;
-      byte temp = str2int(InputBuffer_Serial + 21); // Button number
+      if (InputBuffer_Serial[20] != ';') return success;
+      if (InputBuffer_Serial[22] != ';') return success;
+      
+      replacechar(InputBuffer_Serial+14, ';', 0);
+      bitstream = strtoul(InputBuffer_Serial + 14, NULL, 16);
+      byte temp = atoi(InputBuffer_Serial + 21); // Button number
       bitstream = (bitstream) << 4;
-      if (temp == 1)
-         bitstream = bitstream + 0x02; // 0010
-      if (temp == 2)
-         bitstream = bitstream + 0x04; // 0100
-      if (temp == 3)
-         bitstream = bitstream + 0x08; // 1000
-      if (temp == 6)
-         bitstream = bitstream + 0x0d; // 1101
-      if (temp == 7)
-         bitstream = bitstream + 0x0f; // 1111
-      if (temp > 7)
-      {
-         return success;
-      }
+      
+      if (temp > 7) return success;
+      bitstream = bitstream | (temp << 1);
       byte command = 0;
       command = str2cmd(InputBuffer_Serial + 23);
       if (command == VALUE_OFF)
-      {
          bitstream = bitstream | 1;
-      }
+      if (command == VALUE_ALLON)
+         bitstream = ((bitstream >> 4) << 4) | 0b1101;
+      if (command == VALUE_ALLOFF)
+         bitstream = ((bitstream >> 4) << 4) | 0b1110;
+      //PrintStream(bitstream);
+      
       Eurodomest_Send(bitstream); // the full bitstream to send
       success = true;
    }
    return success;
+//IDkonnecT ***
 }
 
+//*** IDkonnecT >>>
+// Need to add "Radio::pins::" before TX_DATA
+#include "1_Radio.h"
+//<<< IDkonnecT ***
 void Eurodomest_Send(unsigned long address)
 {
    int fpulse = 296; // Pulse witdh in microseconds
