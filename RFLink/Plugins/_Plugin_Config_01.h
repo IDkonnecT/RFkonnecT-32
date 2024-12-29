@@ -93,6 +93,9 @@
 // Misc
 // -------------------
 #define PLUGIN_076 // CAME-TOP432 Gate/Door opener
+#define PLUGIN_100 // Harvesting Switch
+#define PLUGIN_101 // FineOffset Rain Station
+#define PLUGIN_102 // FineOffset Wind Station
 // -------------------
 // 868 MHZ
 // -------------------
